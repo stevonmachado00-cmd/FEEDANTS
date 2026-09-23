@@ -1,0 +1,27 @@
+{
+  "name": "feedants-competition-fullstack",
+  "version": "1.0.0",
+  "description": "Feedants Competition Details Module - Production Full Stack Application",
+  "private": true,
+  "scripts": {
+    "build:frontend": "cd frontend && npx expo export --platform web",
+    "build": "npm run build:frontend",
+    "start": "cd backend && node server.js",
+    "seed": "cd backend && node seed/seedData.js",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run web",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend"
+  },
+  "keywords": [
+    "feedants",
+    "competition",
+    "react-native",
+    "expo",
+    "express",
+    "mongodb"
+  ],
+  "author": "Feedants Engineering",
+  "license": "ISC"
+}

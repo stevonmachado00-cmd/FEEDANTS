@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: feedants-app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/feedants
+      - JWT_ACCESS_SECRET=feedants_prod_access_secret_key_2026
+      - JWT_REFRESH_SECRET=feedants_prod_refresh_secret_key_2026
+      - JWT_ACCESS_EXPIRY=15m
+      - JWT_REFRESH_EXPIRY=7d
+      - ALLOWED_ORIGINS=*
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    container_name: feedants-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
