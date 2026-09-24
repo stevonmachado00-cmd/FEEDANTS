@@ -65,7 +65,31 @@ export const signupUser = createAsyncThunk(
 export const loginUser = createAsyncThunk(
   'user/login',
   async ({ username, password }, { rejectWithValue }) => {
-    const cleanUsername = username.trim().toLowerCase();
+    const rawUsername = username.trim();
+
+    // Fixed Admin Credentials Check (ADMIN / ADMIN01)
+    if (rawUsername.toUpperCase() === 'ADMIN' && password === 'ADMIN01') {
+      try {
+        const data = await api.login({ username: 'ADMIN', password: 'ADMIN01' });
+        return (
+          data.user || {
+            id: 'admin_root_001',
+            username: 'ADMIN',
+            name: 'Feedants Administrator',
+            role: 'admin',
+          }
+        );
+      } catch (e) {
+        return {
+          id: 'admin_root_001',
+          username: 'ADMIN',
+          name: 'Feedants Administrator',
+          role: 'admin',
+        };
+      }
+    }
+
+    const cleanUsername = rawUsername.toLowerCase();
 
     try {
       const data = await api.login({ username: cleanUsername, password });

@@ -178,6 +178,18 @@ export const ALL_COMPETITIONS = [
 
 export const DEFAULT_COMPETITION = ALL_COMPETITIONS[0];
 
+export const fetchAllCompetitions = createAsyncThunk(
+  'competition/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.getAllCompetitions();
+      return response.data || response;
+    } catch (error) {
+      return ALL_COMPETITIONS;
+    }
+  }
+);
+
 export const fetchCompetitionDetails = createAsyncThunk(
   'competition/fetchDetails',
   async (id, { rejectWithValue }) => {
@@ -219,6 +231,25 @@ const competitionSlice = createSlice({
     setCompetition: (state, action) => {
       state.competition = action.payload;
     },
+    addCompetitionLocally: (state, action) => {
+      state.allCompetitions = [action.payload, ...state.allCompetitions];
+      state.competition = action.payload;
+    },
+    updateCompetitionLocally: (state, action) => {
+      const idx = state.allCompetitions.findIndex((c) => c._id === action.payload._id);
+      if (idx !== -1) {
+        state.allCompetitions[idx] = { ...state.allCompetitions[idx], ...action.payload };
+      }
+      if (state.competition?._id === action.payload._id) {
+        state.competition = { ...state.competition, ...action.payload };
+      }
+    },
+    deleteCompetitionLocally: (state, action) => {
+      state.allCompetitions = state.allCompetitions.filter((c) => c._id !== action.payload);
+      if (state.competition?._id === action.payload) {
+        state.competition = state.allCompetitions[0] || DEFAULT_COMPETITION;
+      }
+    },
     updateSpots: (state, action) => {
       if (state.competition) {
         state.competition.bookedSpots = action.payload.bookedSpots;
@@ -239,6 +270,11 @@ const competitionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchAllCompetitions.fulfilled, (state, action) => {
+        if (action.payload && action.payload.length > 0) {
+          state.allCompetitions = action.payload;
+        }
+      })
       .addCase(fetchCompetitionDetails.pending, (state) => {
         state.isLoading = false;
         state.error = null;
@@ -267,6 +303,14 @@ const competitionSlice = createSlice({
   },
 });
 
-export const { setCompetition, updateSpots, incrementSpots, clearError, resetRegistrationStatus } =
-  competitionSlice.actions;
+export const {
+  setCompetition,
+  addCompetitionLocally,
+  updateCompetitionLocally,
+  deleteCompetitionLocally,
+  updateSpots,
+  incrementSpots,
+  clearError,
+  resetRegistrationStatus,
+} = competitionSlice.actions;
 export default competitionSlice.reducer;

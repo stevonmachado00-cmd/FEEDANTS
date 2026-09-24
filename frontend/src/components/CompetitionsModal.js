@@ -20,13 +20,14 @@ const CompetitionsModal = ({
 }) => {
   const dispatch = useDispatch();
   const activeComp = useSelector((state) => state.competition.competition);
+  const allComps = useSelector((state) => state.competition.allCompetitions) || ALL_COMPETITIONS;
   const [filterCategory, setFilterCategory] = useState('All');
 
   const categories = ['All', 'Dance', 'Music', 'Theatre', 'Art'];
 
-  const filteredCompetitions = ALL_COMPETITIONS.filter((comp) => {
+  const filteredCompetitions = (allComps || []).filter((comp) => {
     if (filterCategory === 'All') return true;
-    return comp.categories.some((cat) =>
+    return (comp.categories || []).some((cat) =>
       cat.toLowerCase().includes(filterCategory.toLowerCase())
     );
   });

@@ -132,3 +132,161 @@ exports.getCompetitionStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/competitions/all or GET /api/competitions/list
+exports.getAllCompetitions = async (req, res, next) => {
+  try {
+    let competitions = [];
+    try {
+      competitions = await Competition.find().sort({ createdAt: -1 });
+    } catch (dbErr) {}
+
+    if (!competitions || competitions.length === 0) {
+      competitions = [DEFAULT_COMPETITION];
+    }
+
+    res.status(200).json({
+      success: true,
+      count: competitions.length,
+      data: competitions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/competitions (Admin)
+exports.createCompetition = async (req, res, next) => {
+  try {
+    const {
+      title,
+      categories,
+      highlights,
+      prizePool,
+      entryFee,
+      totalSpots,
+      judge,
+      timeline,
+      rewards,
+      details,
+      status,
+    } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'Competition title is required' });
+    }
+
+    const now = new Date();
+    const newCompData = {
+      title: title.trim(),
+      categories: categories && categories.length ? categories : ['Arts', 'Talent'],
+      highlights: highlights && highlights.length ? highlights : ['Official Certificate & Cash Prize'],
+      prizePool: Number(prizePool) || 1000,
+      entryFee: Number(entryFee) || 0,
+      totalSpots: Number(totalSpots) || 20,
+      bookedSpots: 0,
+      judge: {
+        name: judge?.name || 'Industry Expert',
+        title: judge?.title || 'Professional Evaluator',
+        experience: judge?.experience || '10+ Years',
+        avatarUrl: judge?.avatarUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256',
+        introVideoUrl: judge?.introVideoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      },
+      timeline: {
+        registrationDeadline: timeline?.registrationDeadline ? new Date(timeline.registrationDeadline) : new Date(now.getTime() + 30 * 24 * 3600 * 1000),
+        submissionStart: timeline?.submissionStart ? new Date(timeline.submissionStart) : new Date(now.getTime() + 5 * 24 * 3600 * 1000),
+        submissionEnd: timeline?.submissionEnd ? new Date(timeline.submissionEnd) : new Date(now.getTime() + 45 * 24 * 3600 * 1000),
+        resultDate: timeline?.resultDate ? new Date(timeline.resultDate) : new Date(now.getTime() + 60 * 24 * 3600 * 1000),
+      },
+      rewards: rewards && rewards.length ? rewards : [
+        { position: 1, label: '1st Winner', amount: Math.round((Number(prizePool) || 1000) * 0.5), icon: '🏆' },
+        { position: 2, label: '2nd Winner', amount: Math.round((Number(prizePool) || 1000) * 0.3), icon: '🥈' },
+        { position: 3, label: '3rd Winner', amount: Math.round((Number(prizePool) || 1000) * 0.2), icon: '🥉' },
+      ],
+      details: {
+        about: details?.about || `Welcome to ${title}. Showcase your exceptional talent to international judges!`,
+        judgingParameters: details?.judgingParameters || '1. Technique & Mastery - 40%\n2. Originality & Presentation - 35%\n3. Overall Impact - 25%',
+        rulesAndEligibility: details?.rulesAndEligibility || '• Open to all verified artists.\n• Must be an unedited recorded performance.\n• Video format: MP4/MOV or accessible link.',
+      },
+      status: status || 'registration_open',
+    };
+
+    let savedCompetition;
+    try {
+      savedCompetition = await Competition.create(newCompData);
+    } catch (dbErr) {
+      // Fallback
+      savedCompetition = { ...newCompData, _id: 'comp_' + Date.now(), createdAt: new Date() };
+    }
+
+    // Emit live Socket event if socket server is available
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('competition_created', savedCompetition);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Competition created and published successfully',
+      data: savedCompetition,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PUT /api/competitions/:id (Admin)
+exports.updateCompetition = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    let updated;
+
+    try {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        updated = await Competition.findByIdAndUpdate(id, { $set: req.body }, { new: true, runValidators: true });
+      }
+    } catch (dbErr) {}
+
+    if (!updated) {
+      updated = { ...DEFAULT_COMPETITION, ...req.body, _id: id };
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('competition_updated', updated);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Competition updated successfully',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/competitions/:id (Admin)
+exports.deleteCompetition = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    try {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        await Competition.findByIdAndDelete(id);
+      }
+    } catch (dbErr) {}
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('competition_deleted', { id });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Competition removed successfully',
+      deletedId: id,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

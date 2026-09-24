@@ -1,10 +1,12 @@
-import React from 'react';
-import { Provider, useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { Provider, useSelector, useDispatch } from 'react-redux';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { store } from './src/store';
 import CompetitionDetailsScreen from './src/screens/CompetitionDetailsScreen';
 import AuthScreen from './src/screens/AuthScreen';
+import AdminScreen from './src/screens/AdminScreen';
+import { clearUser } from './src/store/slices/userSlice';
 import { ThemeProvider } from './src/context/ThemeContext';
 
 class ErrorBoundary extends React.Component {
@@ -48,17 +50,44 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Master Content Switcher: Shows AuthScreen first until user logs in or registers
+// Master Content Switcher: Handles User & Admin views
 const AppContent = () => {
+  const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state) => state.user);
+  const isAdmin = user?.role === 'admin' || user?.username?.toUpperCase() === 'ADMIN';
+
+  const [adminViewActive, setAdminViewActive] = useState(false);
+
+  useEffect(() => {
+    if (isAdmin) {
+      setAdminViewActive(true);
+    } else {
+      setAdminViewActive(false);
+    }
+  }, [isAdmin, user]);
 
   // If not authenticated, the Login/Registration page appears first
   if (!isAuthenticated || !user) {
     return <AuthScreen />;
   }
 
+  // If user is Admin and in Admin mode, render Admin Screen
+  if (isAdmin && adminViewActive) {
+    return (
+      <AdminScreen
+        onSwitchToUserView={() => setAdminViewActive(false)}
+        onLogout={() => dispatch(clearUser())}
+      />
+    );
+  }
+
   // Once authenticated, the Home / Competition Details page appears
-  return <CompetitionDetailsScreen />;
+  return (
+    <CompetitionDetailsScreen
+      isAdmin={isAdmin}
+      onOpenAdminPortal={() => setAdminViewActive(true)}
+    />
+  );
 };
 
 export default function App() {

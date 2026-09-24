@@ -5,5 +5,6 @@ const { protect } = require('../middleware/authMiddleware');
 
 router.post('/competitions/:id/register', protect, registrationController.registerForCompetition);
 router.get('/users/me/registration/:compId', protect, registrationController.checkRegistration);
+router.get('/admin/participants', registrationController.getAllParticipants);
 
 module.exports = router;

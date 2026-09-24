@@ -105,6 +105,31 @@ export const getCompetitionDetails = async (id = 'active') => {
   return response.data;
 };
 
+export const getAllCompetitions = async () => {
+  const response = await api.get('/competitions/all');
+  return response.data;
+};
+
+export const createCompetition = async (payload) => {
+  const response = await api.post('/competitions', payload);
+  return response.data;
+};
+
+export const updateCompetition = async (id, payload) => {
+  const response = await api.put(`/competitions/${id}`, payload);
+  return response.data;
+};
+
+export const deleteCompetition = async (id) => {
+  const response = await api.delete(`/competitions/${id}`);
+  return response.data;
+};
+
+export const getAdminParticipants = async () => {
+  const response = await api.get('/admin/participants');
+  return response.data;
+};
+
 export const getCompetitionStatus = async (id = 'active') => {
   const response = await api.get(`/competitions/${id}/status`);
   return response.data;

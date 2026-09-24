@@ -43,7 +43,12 @@ import ParticipationPaymentModal from '../components/ParticipationPaymentModal';
 import TestimonialsModal from '../components/TestimonialsModal';
 import RefundPolicyModal from '../components/RefundPolicyModal';
 
-const CompetitionDetailsScreen = ({ navigation, route }) => {
+const CompetitionDetailsScreen = ({
+  navigation,
+  route,
+  isAdmin,
+  onOpenAdminPortal,
+}) => {
   const dispatch = useDispatch();
   const { competition } = useSelector((state) => state.competition);
   const { user, isAuthenticated } = useSelector((state) => state.user);
@@ -210,6 +215,22 @@ const CompetitionDetailsScreen = ({ navigation, route }) => {
           />
         </View>
       </View>
+
+      {/* Admin Mode Quick Action Bar */}
+      {isAdmin && (
+        <View style={styles.adminBarBanner}>
+          <View style={styles.adminBarContent}>
+            <Text style={styles.adminBarText}>🛡️ Logged in as Administrator</Text>
+            <TouchableOpacity
+              style={styles.adminPortalBtn}
+              onPress={onOpenAdminPortal}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.adminPortalBtnText}>Open Admin Dashboard ➔</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* Main Website Body Container */}
       <ScrollView
@@ -400,6 +421,38 @@ const styles = StyleSheet.create({
   webHeaderContent: {
     width: '100%',
     maxWidth: 760,
+  },
+  adminBarBanner: {
+    backgroundColor: '#0F172A',
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+  },
+  adminBarContent: {
+    width: '100%',
+    maxWidth: 760,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  adminBarText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  adminPortalBtn: {
+    backgroundColor: '#007A78',
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  adminPortalBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '800',
   },
   webScrollView: {
     flex: 1,
