@@ -4,8 +4,8 @@
   "description": "Feedants Competition Details Module - Production Full Stack Application",
   "private": true,
   "scripts": {
-    "build:frontend": "cd frontend && npx expo export --platform web",
-    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm install && npx expo export --platform web",
+    "build": "cd backend && npm install",
     "start": "cd backend && node server.js",
     "seed": "cd backend && node seed/seedData.js",
     "dev:backend": "cd backend && npm run dev",
