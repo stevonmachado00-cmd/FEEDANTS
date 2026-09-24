@@ -5,15 +5,7 @@ const Competition = require('../models/Competition');
 const Registration = require('../models/Registration');
 const bcrypt = require('bcryptjs');
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB Connected for Seeding');
-  } catch (error) {
-    console.error('Connection error:', error);
-    process.exit(1);
-  }
-};
+const connectDB = require('../config/db');
 
 const seed = async () => {
   await connectDB();
@@ -26,6 +18,7 @@ const seed = async () => {
 
     // 3. Create a test user
     const user = await User.create({
+      username: 'testuser',
       name: 'Test User',
       email: 'test@feedants.com',
       password: 'Test@1234'
